@@ -1,0 +1,140 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+struct Nut {
+    int giaTri;
+    struct Nut *trai;
+    struct Nut *phai;
+    int chieuCao;
+};
+
+int timMax(int a, int b) {
+    if (a > b) {
+        return a;
+    }
+    return b;
+}
+
+int layChieuCao(struct Nut *n) {
+    if (n == NULL) {
+        return 0;
+    }
+    return n->chieuCao;
+}
+
+struct Nut* taoNutMoi(int giaTri) {
+    struct Nut *nut = (struct Nut*)malloc(sizeof(struct Nut));
+    nut->giaTri = giaTri;
+    nut->trai = NULL;
+    nut->phai = NULL;
+    nut->chieuCao = 1;
+    return nut;
+}
+
+struct Nut* quayPhai(struct Nut *y) {
+    struct Nut *x = y->trai;
+    struct Nut *T2 = x->phai;
+
+    x->phai = y;
+    y->trai = T2;
+
+    y->chieuCao = timMax(layChieuCao(y->trai), layChieuCao(y->phai)) + 1;
+    x->chieuCao = timMax(layChieuCao(x->trai), layChieuCao(x->phai)) + 1;
+
+    return x;
+}
+
+struct Nut* quayTrai(struct Nut *x) {
+    struct Nut *y = x->phai;
+    struct Nut *T2 = y->trai;
+
+    y->trai = x;
+    x->phai = T2;
+
+    x->chieuCao = timMax(layChieuCao(x->trai), layChieuCao(x->phai)) + 1;
+    y->chieuCao = timMax(layChieuCao(y->trai), layChieuCao(y->phai)) + 1;
+
+    return y;
+}
+
+int layDoLenh(struct Nut *n) {
+    if (n == NULL) {
+        return 0;
+    }
+    return layChieuCao(n->trai) - layChieuCao(n->phai);
+}
+
+struct Nut* themNut(struct Nut *nut, int giaTri) {
+    if (nut == NULL) {
+        return taoNutMoi(giaTri);
+    }
+
+    if (giaTri < nut->giaTri) {
+        nut->trai = themNut(nut->trai, giaTri);
+    } else if (giaTri > nut->giaTri) {
+        nut->phai = themNut(nut->phai, giaTri);
+    } else {
+        return nut;
+    }
+
+    nut->chieuCao = timMax(layChieuCao(nut->trai), layChieuCao(nut->phai)) + 1;
+
+    int doLenh = layDoLenh(nut);
+
+    if (doLenh > 1 && giaTri < nut->trai->giaTri) {
+        return quayPhai(nut);
+    }
+
+    if (doLenh < -1 && giaTri > nut->phai->giaTri) {
+        return quayTrai(nut);
+    }
+
+    if (doLenh > 1 && giaTri > nut->trai->giaTri) {
+        nut->trai = quayTrai(nut->trai);
+        return quayPhai(nut);
+    }
+
+    if (doLenh < -1 && giaTri < nut->phai->giaTri) {
+        nut->phai = quayPhai(nut->phai);
+        return quayTrai(nut);
+    }
+
+    return nut;
+}
+
+void duyetTruoc(struct Nut *goc) {
+    if (goc != NULL) {
+        printf("%d ", goc->giaTri);
+        duyetTruoc(goc->trai);
+        duyetTruoc(goc->phai);
+    }
+}
+
+void duyetGiua(struct Nut *goc) {
+    if (goc != NULL) {
+        duyetGiua(goc->trai);
+        printf("%d ", goc->giaTri);
+        duyetGiua(goc->phai);
+    }
+}
+
+int main() {
+    struct Nut *goc = NULL;
+
+    int daySo[] = {32, 51, 27, 83, 96, 11, 45, 75, 66};
+    int n = sizeof(daySo) / sizeof(daySo[0]);
+
+    for (int i = 0; i < n; i++) {
+        goc = themNut(goc, daySo[i]);
+    }
+
+    printf("Duyet giua: ");
+    duyetGiua(goc);
+    
+    printf("\nDuyet truoc: ");
+    duyetTruoc(goc);
+
+    printf("\n");
+    return 0;
+}
+

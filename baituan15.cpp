@@ -35,6 +35,11 @@ void KhoiTaoMaTran() {
     }
 }
 
+void ThemCanhMaTran(int u, int v) {
+    MaTranKe[u][v] = 1;
+    MaTranKe[v][u] = 1; 
+}
+
 void DuyetBFS_MaTran(int dinhBatDau) {
     bool DaChek[SO_DINH] = {false};
     queue<int> HangDoi;

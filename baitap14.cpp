@@ -1,140 +1,146 @@
-#include <stdio.h>
-#include <stdlib.h>
+#include <iostream>
+#include <algorithm>
+#include <queue>
+
+using namespace std;
 
 struct Nut {
-    int giaTri;
-    struct Nut *trai;
-    struct Nut *phai;
-    int chieuCao;
+    int khoa;
+    int chieu_cao;
+    Nut* trai;
+    Nut* phai;
 };
 
-int timMax(int a, int b) {
-    if (a > b) {
-        return a;
-    }
-    return b;
+int LayChieuCao(Nut* n) {
+    if (n == nullptr) return 0;
+    return n->chieu_cao;
 }
 
-int layChieuCao(struct Nut *n) {
-    if (n == NULL) {
-        return 0;
-    }
-    return n->chieuCao;
+Nut* TaoNutMoi(int value) {
+    Nut* n = new Nut();
+    n->khoa = value;
+    n->chieu_cao = 1;
+    n->trai = nullptr;
+    n->phai = nullptr;
+    return n;
 }
 
-struct Nut* taoNutMoi(int giaTri) {
-    struct Nut *nut = (struct Nut*)malloc(sizeof(struct Nut));
-    nut->giaTri = giaTri;
-    nut->trai = NULL;
-    nut->phai = NULL;
-    nut->chieuCao = 1;
-    return nut;
-}
-
-struct Nut* quayPhai(struct Nut *y) {
-    struct Nut *x = y->trai;
-    struct Nut *T2 = x->phai;
+Nut* XoayPhai(Nut* y) {
+    Nut* x = y->trai;
+    Nut* T2 = x->phai;
 
     x->phai = y;
     y->trai = T2;
 
-    y->chieuCao = timMax(layChieuCao(y->trai), layChieuCao(y->phai)) + 1;
-    x->chieuCao = timMax(layChieuCao(x->trai), layChieuCao(x->phai)) + 1;
+    y->chieu_cao = max(LayChieuCao(y->trai), LayChieuCao(y->phai)) + 1;
+    x->chieu_cao = max(LayChieuCao(x->trai), LayChieuCao(x->phai)) + 1;
 
     return x;
 }
 
-struct Nut* quayTrai(struct Nut *x) {
-    struct Nut *y = x->phai;
-    struct Nut *T2 = y->trai;
+Nut* XoayTrai(Nut* x) {
+    Nut* y = x->phai;
+    Nut* T2 = y->trai;
 
     y->trai = x;
     x->phai = T2;
 
-    x->chieuCao = timMax(layChieuCao(x->trai), layChieuCao(x->phai)) + 1;
-    y->chieuCao = timMax(layChieuCao(y->trai), layChieuCao(y->phai)) + 1;
+    x->chieu_cao = max(LayChieuCao(x->trai), LayChieuCao(x->phai)) + 1;
+    y->chieu_cao = max(LayChieuCao(y->trai), LayChieuCao(y->phai)) + 1;
 
     return y;
 }
 
-int layDoLenh(struct Nut *n) {
-    if (n == NULL) {
-        return 0;
-    }
-    return layChieuCao(n->trai) - layChieuCao(n->phai);
+int LayDoChenhLech(Nut* n) {
+    if (n == nullptr) return 0;
+    return LayChieuCao(n->trai) - LayChieuCao(n->phai);
 }
 
-struct Nut* themNut(struct Nut *nut, int giaTri) {
-    if (nut == NULL) {
-        return taoNutMoi(giaTri);
-    }
+Nut* ThemNut(Nut* goc, int value) {
+    if (goc == nullptr) return TaoNutMoi(value);
 
-    if (giaTri < nut->giaTri) {
-        nut->trai = themNut(nut->trai, giaTri);
-    } else if (giaTri > nut->giaTri) {
-        nut->phai = themNut(nut->phai, giaTri);
+    if (value < goc->khoa) {
+        goc->trai = ThemNut(goc->trai, value);
+    } else if (value > goc->khoa) {
+        goc->phai = ThemNut(goc->phai, value);
     } else {
-        return nut;
+        return goc;
     }
 
-    nut->chieuCao = timMax(layChieuCao(nut->trai), layChieuCao(nut->phai)) + 1;
+    goc->chieu_cao = 1 + max(LayChieuCao(goc->trai), LayChieuCao(goc->phai));
 
-    int doLenh = layDoLenh(nut);
+    int chenh_lech = LayDoChenhLech(goc);
 
-    if (doLenh > 1 && giaTri < nut->trai->giaTri) {
-        return quayPhai(nut);
+    if (chenh_lech > 1 && value < goc->trai->khoa) {
+        return XoayPhai(goc);
     }
 
-    if (doLenh < -1 && giaTri > nut->phai->giaTri) {
-        return quayTrai(nut);
+    if (chenh_lech < -1 && value > goc->phai->khoa) {
+        return XoayTrai(goc);
     }
 
-    if (doLenh > 1 && giaTri > nut->trai->giaTri) {
-        nut->trai = quayTrai(nut->trai);
-        return quayPhai(nut);
+    if (chenh_lech > 1 && value > goc->trai->khoa) {
+        goc->trai = XoayTrai(goc->trai);
+        return XoayPhai(goc);
     }
 
-    if (doLenh < -1 && giaTri < nut->phai->giaTri) {
-        nut->phai = quayPhai(nut->phai);
-        return quayTrai(nut);
+    if (chenh_lech < -1 && value < goc->phai->khoa) {
+        goc->phai = XoayPhai(goc->phai);
+        return XoayTrai(goc);
     }
 
-    return nut;
+    return goc;
 }
 
-void duyetTruoc(struct Nut *goc) {
-    if (goc != NULL) {
-        printf("%d ", goc->giaTri);
-        duyetTruoc(goc->trai);
-        duyetTruoc(goc->phai);
+void DuyetTruoc(Nut* goc) {
+    if (goc != nullptr) {
+        cout << goc->khoa << " ";
+        DuyetTruoc(goc->trai);
+        DuyetTruoc(goc->phai);
     }
 }
 
-void duyetGiua(struct Nut *goc) {
-    if (goc != NULL) {
-        duyetGiua(goc->trai);
-        printf("%d ", goc->giaTri);
-        duyetGiua(goc->phai);
+void DuyetGiua(Nut* goc) {
+    if (goc != nullptr) {
+        DuyetGiua(goc->trai);
+        cout << goc->khoa << " ";
+        DuyetGiua(goc->phai);
+    }
+}
+
+void DuyetTheoTang(Nut* goc) {
+    if (goc == nullptr) return;
+    queue<Nut*> hang_doi;
+    hang_doi.push(goc);
+    while (!hang_doi.empty()) {
+        Nut* hien_tai = hang_doi.front();
+        hang_doi.pop();
+        cout << hien_tai->khoa << " ";
+        if (hien_tai->trai != nullptr) hang_doi.push(hien_tai->trai);
+        if (hien_tai->phai != nullptr) hang_doi.push(hien_tai->phai);
     }
 }
 
 int main() {
-    struct Nut *goc = NULL;
+    Nut* goc_cay = nullptr;
+    int day_so[] = {32, 51, 27, 83, 96, 11, 45, 75, 66};
+    int so_phan_tu = sizeof(day_so) / sizeof(day_so[0]);
 
-    int daySo[] = {32, 51, 27, 83, 96, 11, 45, 75, 66};
-    int n = sizeof(daySo) / sizeof(daySo[0]);
-
-    for (int i = 0; i < n; i++) {
-        goc = themNut(goc, daySo[i]);
+    for (int i = 0; i < so_phan_tu; i++) {
+        goc_cay = ThemNut(goc_cay, day_so[i]);
     }
 
-    printf("Duyet giua: ");
-    duyetGiua(goc);
-    
-    printf("\nDuyet truoc: ");
-    duyetTruoc(goc);
+    cout << "Duyet truoc (NLR): ";
+    DuyetTruoc(goc_cay);
+    cout << endl;
 
-    printf("\n");
+    cout << "Duyet giua (LNR): ";
+    DuyetGiua(goc_cay);
+    cout << endl;
+
+    cout << "Duyet theo tung tang: ";
+    DuyetTheoTang(goc_cay);
+    cout << endl;
+
     return 0;
 }
-
